@@ -1,0 +1,132 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background-color: #1e1e1e;
+  color: #f0f0f0;
+}
+
+.container {
+  background: #2b2b2b;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  max-width: 700px;
+  margin: 40px auto;
+}
+
+h1,
+h2 {
+  color: #ffffff;
+  margin-top: 0;
+}
+
+label {
+  display: block;
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  margin-bottom: 20px;
+  border: 1px solid #555;
+  border-radius: 8px;
+  background-color: #2e2c2c;
+  color: #f0f0f0;
+}
+
+button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-weight: bold;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+button.delete-btn {
+  background-color: #dc3545;
+}
+
+button.delete-btn:hover {
+  background-color: #c82333;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  background-color: #3a3a3a;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #f0f0f0;
+}
+
+#mensaje {
+  padding: 12px;
+  margin-top: 15px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.exito {
+  background-color: #155724;
+  color: #d4edda;
+}
+
+.error {
+  background-color: #721c24;
+  color: #f8d7da;
+}
+
+.nav-links {
+  margin-bottom: 20px;
+}
+
+.nav-links a {
+  margin-right: 15px;
+  color: #61dafb;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.nav-links a:hover {
+  text-decoration: underline;
+}
+form#formAgregar {
+  margin-bottom: 30px;
+}
+.action-link.manage-sobres {
+  display: inline-block;
+  background-color: #077807; /* verde */
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  text-decoration: none;
+  margin-right: 10px;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.action-link.manage-sobres:hover {
+  background-color: #218838;
+}
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
