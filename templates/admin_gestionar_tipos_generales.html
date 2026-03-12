@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Gestionar Tipos Generales de Carta</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/estilos_admin.css') }}"
+    />
+    <link
+      rel="icon"
+      href="{{ url_for('static', filename='imagenes/pokeball.svg') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav-links">
+        <a href="{{ url_for('home') }}">Volver al inicio</a>
+      </div>
+      <div id="mensaje"></div>
+
+      <h2>Añadir Nuevo Tipo General</h2>
+      <form id="formAgregar">
+        <label for="nombreNuevo">Nombre</label>
+        <input type="text" id="nombreNuevo" required />
+        <button type="submit">Agregar Tipo General</button>
+      </form>
+
+      <h2>Tipos Generales Añadidos</h2>
+      <ul id="listaExistentes">
+        {% if tipos_generales %} {% for tg in tipos_generales %}
+        <li>
+          <span>{{ tg.nombre }} (ID: {{ tg.id }})</span>
+          <button
+            class="delete-btn"
+            data-id="{{ tg.id }}"
+            data-nombre="{{ tg.nombre }}"
+          >
+            Eliminar
+          </button>
+        </li>
+        {% endfor %} {% else %}
+        <li>No hay tipos generales definidos.</li>
+        {% endif %}
+      </ul>
+    </div>
+
+    <script>
+      const formAgregar = document.getElementById("formAgregar");
+      const inputNombreNuevo = document.getElementById("nombreNuevo");
+      const listaExistentesUl = document.getElementById("listaExistentes");
+      const mensajeDiv = document.getElementById("mensaje");
+
+      // URL de las APIs para Tipos Generales
+      const URL_API_GET_TIPOS_GENERALES =
+        "{{ url_for('api_get_tipos_generales') }}";
+      const URL_API_AGREGAR_TIPO_GENERAL =
+        "{{ url_for('api_agregar_tipo_general') }}";
+
+      function mostrarMensaje(texto, tipo = "exito") {
+        mensajeDiv.textContent = texto;
+        mensajeDiv.className = tipo;
+        setTimeout(() => {
+          mensajeDiv.textContent = "";
+          mensajeDiv.className = "";
+        }, 5000);
+      }
+
+      async function refrescarLista() {
+        try {
+          const response = await fetch(URL_API_GET_TIPOS_GENERALES);
+          const data = await response.json();
+          listaExistentesUl.innerHTML = "";
+
+          if (response.ok) {
+            if (data.length === 0) {
+              listaExistentesUl.innerHTML =
+                "<li>No hay tipos generales definidos.</li>";
+            } else {
+              data.forEach((item) => {
+                const li = document.createElement("li");
+                li.innerHTML = `<span>${item.nombre} (ID: ${item.id})</span>
+                                <button class="delete-btn" data-id="${item.id}" data-nombre="${item.nombre}">Eliminar</button>`;
+                listaExistentesUl.appendChild(li);
+              });
+            }
+          } else {
+            listaExistentesUl.innerHTML = `<li>Error al cargar: ${
+              data.error || "Error desconocido"
+            }</li>`;
+          }
+        } catch (error) {
+          listaExistentesUl.innerHTML = `<li>Error de conexion al cargar lista.</li>`;
+          console.error("Error refrescando lista:", error);
+        }
+      }
+
+      formAgregar.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const nombre = inputNombreNuevo.value.trim();
+        if (!nombre) {
+          mostrarMensaje("El nombre no puede estar vacio.", "error");
+          return;
+        }
+        try {
+          const response = await fetch(URL_API_AGREGAR_TIPO_GENERAL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nombre: nombre }),
+          });
+          const resultado = await response.json();
+          if (response.ok) {
+            mostrarMensaje(
+              resultado.message || "Agregado exitosamente.",
+              "exito"
+            );
+            inputNombreNuevo.value = "";
+            refrescarLista();
+          } else {
+            mostrarMensaje(resultado.error || "Error al agregar.", "error");
+          }
+        } catch (error) {
+          mostrarMensaje("Error de conexion.", "error");
+        }
+      });
+
+      listaExistentesUl.addEventListener("click", async (e) => {
+        if (e.target.classList.contains("delete-btn")) {
+          const id = e.target.dataset.id;
+          const nombre = e.target.dataset.nombre;
+
+          if (
+            confirm(
+              `¿Seguro que quieres eliminar el tipo general "${nombre}" (ID: ${id})? Es permanente y no se puede revertir`
+            )
+          ) {
+            try {
+              const response = await fetch(
+                `/api/tipos_generales/eliminar/${id}`,
+                {
+                  method: "DELETE",
+                }
+              );
+              const resultado = await response.json();
+              if (response.ok) {
+                mostrarMensaje(
+                  resultado.message || "Eliminado exitosamente.",
+                  "exito"
+                );
+                refrescarLista();
+              } else {
+                mostrarMensaje(
+                  resultado.error || "Error al eliminar.",
+                  "error"
+                );
+              }
+            } catch (error) {
+              mostrarMensaje("Error de conexion al eliminar.", "error");
+            }
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

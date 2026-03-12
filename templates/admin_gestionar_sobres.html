@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Gestionar Sobres de {{ expansion.nombre }}</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/estilos_admin.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav-links">
+        <a href="{{ url_for('admin_gestionar_expansiones') }}"
+          >Volver a Expansiones</a
+        >
+      </div>
+      <h1>Gestionar Sobres de "{{ expansion.nombre }}"</h1>
+      <div id="mensaje"></div>
+
+      <h2>Agregar Nuevo Sobre a esta Expansion</h2>
+      <form id="formAgregarSobre">
+        <label for="nombreSobreNuevo">Nombre del Sobre:</label>
+        <input type="text" id="nombreSobreNuevo" required />
+        <button type="submit">Agregar Sobre</button>
+      </form>
+
+      <h2>Sobres Existentes en "{{ expansion.nombre }}"</h2>
+      <ul id="listaSobres">
+        <li>Cargando sobres...</li>
+      </ul>
+    </div>
+
+    <script>
+      const expansionId = "{{ expansion.id }}";
+      const formAgregarSobre = document.getElementById("formAgregarSobre");
+      const inputNombreSobreNuevo = document.getElementById("nombreSobreNuevo");
+      const listaSobresUl = document.getElementById("listaSobres");
+      const mensajeDiv = document.getElementById("mensaje");
+
+      function mostrarMensaje(texto, tipo = "exito") {
+        mensajeDiv.textContent = texto;
+        mensajeDiv.className = tipo;
+        setTimeout(() => {
+          mensajeDiv.textContent = "";
+          mensajeDiv.className = "";
+        }, 5000);
+      }
+
+      async function refrescarListaSobres() {
+        try {
+          const response = await fetch(
+            `/api/expansiones/${expansionId}/sobres`
+          );
+          const sobres = await response.json();
+          listaSobresUl.innerHTML = "";
+          if (response.ok) {
+            if (sobres.length === 0) {
+              listaSobresUl.innerHTML =
+                "<li>No hay sobres definidos para esta expansion.</li>";
+            } else {
+              sobres.forEach((sobre) => {
+                const li = document.createElement("li");
+                li.innerHTML = `<span>${sobre.nombre} (ID: ${sobre.id})</span>
+                                          <button class="delete-btn" data-id="${sobre.id}">Eliminar</button>`;
+                listaSobresUl.appendChild(li);
+              });
+            }
+          } else {
+            listaSobresUl.innerHTML = `<li>Error al cargar sobres: ${
+              sobres.error || "Error desconocido"
+            }</li>`;
+          }
+        } catch (error) {
+          listaSobresUl.innerHTML =
+            "<li>Error de conexion al cargar sobres.</li>";
+          console.error("Error refrescando lista de sobres:", error);
+        }
+      }
+
+      formAgregarSobre.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const nombre = inputNombreSobreNuevo.value.trim();
+        if (!nombre) {
+          mostrarMensaje("El nombre del sobre no puede estar vacio.", "error");
+          return;
+        }
+        try {
+          const response = await fetch("{{ url_for('api_agregar_sobre') }}", {
+            // Endpoint general para agregar sobres
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nombre: nombre, expansion_id: expansionId }),
+          });
+          const resultado = await response.json();
+          if (response.ok) {
+            mostrarMensaje(resultado.message || "Sobre agregado.", "exito");
+            inputNombreSobreNuevo.value = "";
+            refrescarListaSobres();
+          } else {
+            mostrarMensaje(
+              resultado.error || "Error al agregar sobre.",
+              "error"
+            );
+          }
+        } catch (error) {
+          mostrarMensaje("Error de conexion.", "error");
+        }
+      });
+
+      listaSobresUl.addEventListener("click", async (e) => {
+        if (e.target.classList.contains("delete-btn")) {
+          const id = e.target.dataset.id;
+          if (confirm(`¿Seguro que quieres eliminar este sobre?`)) {
+            try {
+              const response = await fetch(`/api/sobres/eliminar/${id}`, {
+                method: "DELETE",
+              });
+              const resultado = await response.json();
+              if (response.ok) {
+                mostrarMensaje(
+                  resultado.message || "Sobre eliminado.",
+                  "exito"
+                );
+                refrescarListaSobres();
+              } else {
+                mostrarMensaje(
+                  resultado.error || "Error al eliminar sobre.",
+                  "error"
+                );
+              }
+            } catch (error) {
+              mostrarMensaje("Error de conexion.", "error");
+            }
+          }
+        }
+      });
+
+      document.addEventListener("DOMContentLoaded", refrescarListaSobres);
+    </script>
+  </body>
+</html>

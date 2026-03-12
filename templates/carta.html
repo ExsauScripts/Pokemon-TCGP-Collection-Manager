@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Detalles de {{ carta.nombre }}</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/estilos_carta.css') }}"
+    />
+  </head>
+  <body>
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <ul class="flashes">
+      {% for category, message in messages %}
+      <li class="flash {{ category }}">{{ message }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %} {% endwith %}
+
+    <h1>{{ carta.nombre }}</h1>
+    <img
+      src="{{ url_for('static', filename='Cartas/' + carta.imagen) }}"
+      alt="{{ carta.nombre }}"
+    />
+    <ul>
+      <li>
+        <strong>Expansion:</strong> {{ carta.expansion.nombre if carta.expansion
+        else 'N/A' }}
+      </li>
+      <li>
+        <strong>Sobres:</strong> {{ carta.sobre.nombre if carta.sobre else 'N/A'
+        }}
+      </li>
+      <li><strong>HP:</strong> {{ carta.hp or 'N/A' }}</li>
+      <li><strong>Rareza:</strong> {{ carta.rareza or 'N/A' }}</li>
+      <li>
+        <strong>Tipo:</strong> {{ carta.tipo.nombre if carta.tipo else 'N/A' }}
+      </li>
+      <li>
+        <strong>Debilidad:</strong> {{ carta.debilidad.nombre if carta.debilidad
+        else 'N/A' }}
+      </li>
+      <li>
+        <strong>Evolucion:</strong> {{ carta.evolucion.nombre if carta.evolucion
+        else 'N/A' }}
+      </li>
+      <li>
+        <strong>Coste Retirada:</strong> {{ carta.coste_retirada or 'N/A' }}
+      </li>
+      <li>
+        <strong>Habilidad:</strong> {{ 'Si' if carta.habilidad else 'No' }}
+      </li>
+      <li><strong>EX:</strong> {{ 'Si' if carta.ex else 'No' }}</li>
+      <li><strong>Cantidad:</strong> {{ carta.cantidad }}</li>
+      <li><strong>Cantidad F2P:</strong> {{ carta.cantidad_f2p }}</li>
+    </ul>
+
+    <div class="button-container">
+      <a href="{{ url_for('home') }}">Volver</a>
+
+      <!-- Boton eliminar -->
+      <form
+        method="POST"
+        action="{{ url_for('eliminar_carta', carta_id=carta.id) }}"
+        style="display: inline"
+      >
+        <button type="submit" class="danger">Eliminar Carta</button>
+      </form>
+
+      <!-- Boton agregar variacion -->
+      <form
+        method="GET"
+        action="{{ url_for('agregar_variacion', id_carta_base=carta.id) }}"
+        style="display: inline"
+      >
+        <button type="submit">Agregar Variacion</button>
+      </form>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Gestionar Expansiones</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/estilos_admin.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav-links">
+        <a href="{{ url_for('home') }}">Ir a Coleccion</a>
+      </div>
+      <h1>Gestionar Expansiones</h1>
+      <div id="mensaje"></div>
+
+      <h2>Agregar Nueva Expansion</h2>
+      <form id="formAgregar">
+        <label for="nombreNuevo">Nombre de la Expansion:</label>
+        <input type="text" id="nombreNuevo" required />
+        <button type="submit">Agregar Expansion</button>
+      </form>
+
+      <h2>Expansiones Existentes</h2>
+      <ul id="listaExistentes">
+        {% for item in expansiones %}
+        <li>
+          <span>{{ item.nombre }} (ID: {{ item.id }})</span>
+          <div class="actions">
+            <a
+              href="{{ url_for('admin_gestionar_sobres', expansion_id=item.id) }}"
+              class="action-link manage-sobres"
+              >Gestionar Sobres</a
+            >
+            <button class="delete-btn" data-id="{{ item.id }}">
+              Eliminar Expansion
+            </button>
+          </div>
+        </li>
+        {% else %}
+        <li>No hay expansiones definidas.</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <script>
+      const formAgregar = document.getElementById("formAgregar");
+      const inputNombreNuevo = document.getElementById("nombreNuevo");
+      const listaExistentesUl = document.getElementById("listaExistentes");
+      const mensajeDiv = document.getElementById("mensaje");
+
+      function mostrarMensaje(texto, tipo = "exito") {
+        mensajeDiv.textContent = texto;
+        mensajeDiv.className = tipo;
+        setTimeout(() => {
+          mensajeDiv.textContent = "";
+          mensajeDiv.className = "";
+        }, 5000);
+      }
+
+      async function refrescarLista() {
+        try {
+          const response = await fetch("{{ url_for('api_get_expansiones') }}");
+          const data = await response.json();
+          listaExistentesUl.innerHTML = "";
+          if (response.ok) {
+            if (data.length === 0) {
+              listaExistentesUl.innerHTML =
+                "<li>No hay expansiones definidas.</li>";
+            } else {
+              data.forEach((item) => {
+                const li = document.createElement("li");
+                li.innerHTML = `<span>${item.nombre} (ID: ${item.id})</span>
+                                            <div class="actions">
+                                                <a href="/admin/expansiones/${item.id}/sobres" class="action-link manage-sobres">Gestionar Sobres</a>
+                                                <button class="delete-btn" data-id="${item.id}">Eliminar Expansion</button>
+                                            </div>`;
+                listaExistentesUl.appendChild(li);
+              });
+            }
+          } else {
+            listaExistentesUl.innerHTML = `<li>Error al cargar: ${
+              data.error || "Error desconocido"
+            }</li>`;
+          }
+        } catch (error) {
+          listaExistentesUl.innerHTML = `<li>Error de conexion al cargar lista.</li>`;
+        }
+      }
+
+      formAgregar.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const nombre = inputNombreNuevo.value.trim();
+        if (!nombre) {
+          mostrarMensaje("El nombre no puede estar vacio.", "error");
+          return;
+        }
+        try {
+          const response = await fetch(
+            "{{ url_for('api_agregar_expansion') }}",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ nombre: nombre }),
+            }
+          );
+          const resultado = await response.json();
+          if (response.ok) {
+            mostrarMensaje(resultado.message || "Agregado.", "exito");
+            inputNombreNuevo.value = "";
+            refrescarLista();
+          } else {
+            mostrarMensaje(resultado.error || "Error.", "error");
+          }
+        } catch (error) {
+          mostrarMensaje("Error de conexion.", "error");
+        }
+      });
+
+      listaExistentesUl.addEventListener("click", async (e) => {
+        if (e.target.classList.contains("delete-btn")) {
+          const id = e.target.dataset.id;
+          if (
+            confirm(
+              `¿Seguro que quieres eliminar esta expansion y TODOS sus sobres asociados?`
+            )
+          ) {
+            try {
+              const response = await fetch(`/api/expansiones/eliminar/${id}`, {
+                method: "DELETE",
+              });
+              const resultado = await response.json();
+              if (response.ok) {
+                mostrarMensaje(resultado.message || "Eliminado.", "exito");
+                refrescarLista();
+              } else {
+                mostrarMensaje(resultado.error || "Error.", "error");
+              }
+            } catch (error) {
+              mostrarMensaje("Error de conexion.", "error");
+            }
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

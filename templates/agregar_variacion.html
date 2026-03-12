@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agregar Variacion de Carta</title>
+  </head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #eee;
+      margin: 0;
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background-color: rgba(30, 30, 30, 0.9);
+      border-radius: 12px;
+      padding: 30px 40px;
+      max-width: 450px;
+      width: 100%;
+      box-shadow: 0 0 20px rgba(0, 170, 255, 0.5);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      font-weight: 700;
+      color: #fbfbfb;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    label {
+      font-weight: 600;
+      margin-bottom: -10px;
+      font-size: 0.9em;
+      color: #aaa;
+    }
+
+    select,
+    input[type="text"],
+    input[type="number"],
+    input[type="file"] {
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid #444;
+      font-size: 16px;
+      background-color: #222;
+      color: #eee;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    select:focus,
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    input[type="file"]:focus {
+      border-color: #00aaff;
+      box-shadow: 0 0 5px rgba(0, 170, 255, 0.5);
+    }
+
+    input[type="file"] {
+      padding: 8px 12px;
+    }
+
+    input[type="file"]::file-selector-button {
+      background-color: #00aaff;
+      color: #121212;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+      font-weight: 600;
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    button[type="submit"] {
+      background-color: #00aaff;
+      color: #121212;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 0;
+      cursor: pointer;
+      font-size: 18px;
+      margin-top: 10px;
+      transition: background-color 0.25s ease, transform 0.1s ease;
+    }
+    button[type="submit"]:hover {
+      background-color: #008ecc;
+    }
+    button[type="submit"]:active {
+      transform: scale(0.98);
+    }
+    a.boton-volver {
+      text-align: center;
+      margin-top: 20px;
+      color: #00aaff;
+      font-weight: 600;
+      text-decoration: none;
+      display: block;
+      user-select: none;
+    }
+    a.boton-volver:hover {
+      text-decoration: underline;
+    }
+    .flash-message {
+      margin-bottom: 20px;
+      padding: 12px 15px;
+      border-radius: 8px;
+      font-weight: 600;
+      color: #fff;
+      background-color: #28a745;
+      border: 1px solid #34c759;
+    }
+    .flash-message.error {
+      background-color: #dc3545;
+      border-color: #ff453a;
+    }
+  </style>
+  <body>
+    <div class="container">
+      <h1>Agregar Variacion de Carta</h1>
+
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div class="flash-message {{ category }}">{{ message }}</div>
+      {% endfor %} {% endif %} {% endwith %}
+
+      <form method="POST" enctype="multipart/form-data">
+        <label for="nombre">Nombre:</label>
+        <input
+          type="text"
+          id="nombre"
+          name="nombre"
+          value="{{ carta_original.nombre }}"
+          required
+        />
+        <label for="rareza">Rareza:</label>
+        <select id="rareza" name="rareza" required>
+          <option value="" disabled selected>Seleccione rareza</option>
+          <option value="1 Rombo">1 Rombo</option>
+          <option value="2 Rombos">2 Rombos</option>
+          <option value="3 Rombos">3 Rombos</option>
+          <option value="4 Rombos">4 Rombos</option>
+          <option value="1 Estrella">1 Estrella</option>
+          <option value="2 Estrellas">2 Estrellas</option>
+          <option value="3 Estrellas">3 Estrellas</option>
+          <option value="1 Estrella arcoiris">1 Estrella arcoiris</option>
+          <option value="2 Estrellas arcoiris">2 Estrellas arcoiris</option>
+          <option value="Corona">Corona</option>
+          <option value="Promo">Promo</option>
+        </select>
+
+        <label for="imagen">Imagen (de la nueva variacion):</label>
+        <input
+          type="file"
+          id="imagen"
+          name="imagen"
+          accept="image/*"
+          required
+        />
+
+        <label for="cantidad">Cantidad (coleccion principal):</label>
+        <input
+          type="number"
+          id="cantidad"
+          name="cantidad"
+          min="0"
+          value="0"
+          required
+        />
+
+        <label for="cantidad_f2p">Cantidad en F2P:</label>
+        <input
+          type="number"
+          id="cantidad_f2p"
+          name="cantidad_f2p"
+          min="0"
+          value="0"
+          required
+        />
+
+        <button type="submit">Agregar Variacion</button>
+      </form>
+
+      <a href="{{ url_for('home') }}" class="boton-volver"
+        >← Volver a la coleccion</a
+      >
+    </div>
+  </body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Gestionar Tipos</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/estilos_admin.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav-links">
+        <a href="{{ url_for('home') }}">Volver al inicio</a>
+      </div>
+      <div id="mensaje"></div>
+
+      <h2>Añadir Nuevo Tipo</h2>
+      <form id="formAgregar">
+        <label for="nombreNuevo">Nombre</label>
+        <input type="text" id="nombreNuevo" required />
+        <button type="submit">Agregar Tipo</button>
+      </form>
+
+      <h2>Tipos Añadidos</h2>
+      <ul id="listaExistentes">
+        {% if tipos %} {% for tipo in tipos %}
+        <li>
+          <span>{{ tipo.nombre }} (ID: {{ tipo.id }})</span>
+          <button class="delete-btn" data-id="{{ tipo.id }}">Eliminar</button>
+        </li>
+        {% endfor %} {% else %}
+        <li>No hay tipos definidos.</li>
+        {% endif %}
+      </ul>
+    </div>
+
+    <script>
+      const formAgregar = document.getElementById("formAgregar");
+      const inputNombreNuevo = document.getElementById("nombreNuevo");
+      const listaExistentesUl = document.getElementById("listaExistentes");
+      const mensajeDiv = document.getElementById("mensaje");
+
+      function mostrarMensaje(texto, tipo = "exito") {
+        mensajeDiv.textContent = texto;
+        mensajeDiv.className = tipo;
+        setTimeout(() => {
+          mensajeDiv.textContent = "";
+          mensajeDiv.className = "";
+        }, 5000);
+      }
+
+      async function refrescarLista() {
+        try {
+          const response = await fetch("{{ url_for('api_get_tipos') }}");
+          const data = await response.json();
+          listaExistentesUl.innerHTML = "";
+          if (response.ok) {
+            if (data.length === 0) {
+              listaExistentesUl.innerHTML = "<li>No hay tipos definidos.</li>";
+            } else {
+              data.forEach((item) => {
+                const li = document.createElement("li");
+                li.innerHTML = `<span>${item.nombre} (ID: ${item.id})</span>
+                                            <button class="delete-btn" data-id="${item.id}">Eliminar</button>`;
+                listaExistentesUl.appendChild(li);
+              });
+            }
+          } else {
+            listaExistentesUl.innerHTML = `<li>Error al cargar: ${
+              data.error || "Error desconocido"
+            }</li>`;
+          }
+        } catch (error) {
+          listaExistentesUl.innerHTML = `<li>Error de conexion al cargar lista.</li>`;
+          console.error("Error refrescando lista:", error);
+        }
+      }
+
+      formAgregar.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const nombre = inputNombreNuevo.value.trim();
+        if (!nombre) {
+          mostrarMensaje("El nombre no puede estar vacio.", "error");
+          return;
+        }
+        try {
+          const response = await fetch("{{ url_for('api_agregar_tipo') }}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nombre: nombre }),
+          });
+          const resultado = await response.json();
+          if (response.ok) {
+            mostrarMensaje(
+              resultado.message || "Agregado exitosamente.",
+              "exito"
+            );
+            inputNombreNuevo.value = "";
+            refrescarLista();
+          } else {
+            mostrarMensaje(resultado.error || "Error al agregar.", "error");
+          }
+        } catch (error) {
+          mostrarMensaje("Error de conexion.", "error");
+        }
+      });
+
+      listaExistentesUl.addEventListener("click", async (e) => {
+        if (e.target.classList.contains("delete-btn")) {
+          const id = e.target.dataset.id;
+          if (
+            confirm(
+              `¿Seguro que quieres eliminar el tipo con ID ${id}? Esta accion no se puede deshacer`
+            )
+          ) {
+            try {
+              const response = await fetch(`/api/tipos/eliminar/${id}`, {
+                method: "DELETE",
+              });
+              const resultado = await response.json();
+              if (response.ok) {
+                mostrarMensaje(
+                  resultado.message || "Eliminado exitosamente.",
+                  "exito"
+                );
+                refrescarLista();
+              } else {
+                mostrarMensaje(
+                  resultado.error || "Error al eliminar.",
+                  "error"
+                );
+              }
+            } catch (error) {
+              mostrarMensaje("Error de conexion al eliminar.", "error");
+            }
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

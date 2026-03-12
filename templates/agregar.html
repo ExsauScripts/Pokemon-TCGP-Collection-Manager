@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Agregar Carta</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/estilos_agregar.css') }}"
+    />
+     <link
+      rel="icon"
+      href="{{ url_for('static', filename='imagenes/pokeball.svg') }}"
+    />
+  </head>
+  <body>
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+messages %}
+<div
+  id="flash-messages"
+  style="
+    position: fixed;
+    top: 70px;
+    right: 10px;
+    z-index: 1050;
+    width: 300px;
+  "
+>
+  {% for category, message in messages %}
+  <div
+    class="flash-message {{ category }}"
+    style="
+      padding: 10px;
+      margin-bottom: 5px;
+      border-radius: 5px;
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    "
+  >
+    {{ message }}
+    <button
+      type="button"
+      style="
+        float: right;
+        background: none;
+        border: none;
+        font-size: 1.2em;
+        cursor: pointer;
+        line-height: 1;
+      "
+      onclick="this.parentElement.style.display='none';"
+    >
+      ×
+    </button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %} {% endwith %}
+    <div class="form-container">
+      <h1>Agregar una nueva carta</h1>
+      <form
+        id="formAgregarCarta"
+        method="POST"
+        action="{{ url_for('agregar_carta_route') }}"
+        enctype="multipart/form-data"
+      >
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" name="nombre" required value="{{ carta_data.get('nombre', '') }}" />
+
+        <label for="hp">Vida (HP):</label>
+        <input type="text" id="hp" name="hp" required value="{{ carta_data.get('hp', '') }}" />
+
+        <label for="energia">Energia:</label>
+        <select id="energia" name="energia" required>
+          <option value="" {% if not carta_data.get('energia') %}selected{% endif %}>-- Selecciona tipo de energia --</option>
+          <option value="No Aplica" {% if carta_data.get('energia') == 'No Aplica' %}selected{% endif %}>No Aplica</option>
+          <option value="same_type" {% if carta_data.get('energia') == 'same_type' %}selected{% endif %}>De su tipo</option>
+          <option value="mixta" {% if carta_data.get('energia') == 'mixta' %}selected{% endif %}>Mixta</option>
+          <option value="incolora" {% if carta_data.get('energia') == 'incolora' %}selected{% endif %}>Incolora</option>
+        </select>
+
+        <!-- TIPO (Dinamico) -->
+        <label for="tipo">Tipo:</label>
+        <select id="tipo" name="tipo" required>
+          <option value="">Seleccione un tipo</option>
+        </select>
+
+        <!-- DEBILIDAD (Dinamico, usa los mismos que Tipo) -->
+        <label for="debilidad">Debilidad:</label>
+        <select id="debilidad" name="debilidad">
+          <option value="">Seleccione debilidad</option>
+         
+        </select>
+
+        <!-- EVOLUCION (Dinamico) -->
+        <label for="evolucion">Evolucion:</label>
+        <select id="evolucion" name="evolucion"> 
+          <option value="">Seleccione evolucion</option>
+          
+        </select>
+
+        <!-- EXPANSION (Dinamico) -->
+        <label for="expansion">Expansion:</label>
+        <select id="expansion" name="expansion"> 
+          <option value="">Seleccione una expansion</option>
+          
+        </select>
+
+        <!-- SOBRE (Dinamico, depende de la expansion) -->
+        <label for="sobre">Sobre:</label>
+        <select id="sobre" name="sobre" disabled>
+          <option value="">-- Selecciona una expansion primero --</option>
+          
+        </select>
+        
+        
+        <label for="coste_retirada">Coste de retirada:</label>
+        <select id="coste_retirada" name="coste_retirada" required>
+          <option value="No aplica" {% if carta_data.get('coste_retirada') == 'No aplica' %}selected{% endif %}>No Aplica</option>
+          <option value="0" {% if carta_data.get('coste_retirada') == '0' %}selected{% endif %}>0 Energias</option>
+          <option value="1" {% if carta_data.get('coste_retirada') == '1' %}selected{% endif %}>1 Energia</option>
+          <option value="2" {% if carta_data.get('coste_retirada') == '2' %}selected{% endif %}>2 Energias</option>
+          <option value="3" {% if carta_data.get('coste_retirada') == '3' %}selected{% endif %}>3 Energias</option>
+          <option value="4" {% if carta_data.get('coste_retirada') == '4' %}selected{% endif %}>4 Energias</option>
+          <option value="5" {% if carta_data.get('coste_retirada') == '5' %}selected{% endif %}>5 Energias</option>
+        </select>
+
+        <label for="rareza">Rareza:</label>
+        <select id="rareza" name="rareza" required>
+            <option value="" {% if not carta_data.get('rareza') %}disabled selected{% endif %}>Rareza</option>
+            <option value="1 Rombo" {% if carta_data.get('rareza') == '1 Rombo' %}selected{% endif %}>1 Rombo</option>
+            <option value="2 Rombos" {% if carta_data.get('rareza') == '2 Rombos' %}selected{% endif %}>2 Rombos</option>
+            <option value="3 Rombos" {% if carta_data.get('rareza') == '3 Rombos' %}selected{% endif %}>3 Rombos</option>
+            <option value="4 Rombos" {% if carta_data.get('rareza') == '4 Rombos' %}selected{% endif %}>4 Rombos</option>
+            <option value="1 Estrella" {% if carta_data.get('rareza') == '1 Estrella' %}selected{% endif %}>1 Estrella</option>
+            <option value="2 Estrellas" {% if carta_data.get('rareza') == '2 Estrellas' %}selected{% endif %}>2 Estrellas</option>
+            <option value="3 Estrellas" {% if carta_data.get('rareza') == '3 Estrellas' %}selected{% endif %}>3 Estrellas</option>
+            <option value="1 Estrella arcoiris" {% if carta_data.get('rareza') == '1 Estrella arcoiris' %}selected{% endif %}>1 Estrella arcoiris</option>
+            <option value="2 Estrellas arcoiris" {% if carta_data.get('rareza') == '2 Estrellas arcoiris' %}selected{% endif %}>2 Estrellas arcoiris</option>
+            <option value="Corona" {% if carta_data.get('rareza') == 'Corona' %}selected{% endif %}>Corona</option>
+            <option value="Promo" {% if carta_data.get('rareza') == 'Promo' %}selected{% endif %}>Promo</option>
+        </select>
+
+        <!-- ***** TIPO GENERAL (DINAMICO) ***** -->
+        <label for="tipo_general">Tipo de Carta:</label>
+        <select id="tipo_general" name="tipo_general" required>
+            <option value="">Seleccione Tipo de Carta</option>
+           
+        </select>
+
+
+        <label for="cantidad_f2p">Cantidad F2P:</label>
+        <input type="number" id="cantidad_f2p" name="cantidad_f2p" min="0" value="{{ carta_data.get('cantidad_f2p', '0') }}" />
+
+        <label for="cantidad">Cantidad Main:</label>
+        <input
+          type="number"
+          id="cantidad"
+          name="cantidad"
+          min="0"
+          value="{{ carta_data.get('cantidad', '1') }}"
+          step="1"
+          required
+        />
+
+        <div class="checkbox-group">
+            <input type="checkbox" id="ex" name="ex" value="on" {% if carta_data.get('ex') == 'on' or carta_data.get('ex') == True %}checked{% endif %} />
+            <label for="ex">Es EX</label>
+        </div>
+
+        <div class="checkbox-group">
+            <input type="checkbox" id="habilidad" name="habilidad" value="on" {% if carta_data.get('habilidad') == 'on' or carta_data.get('habilidad') == True %}checked{% endif %} />
+            <label for="habilidad">Tiene habilidad</label>
+        </div>
+
+        <label for="imagen">Imagen:</label>
+        <input
+          type="file"
+          id="imagen"
+          name="imagen"
+          accept="image/*"
+          {% if not carta_data %}required{% endif %} <!-- Solo requerido si no hay carta_data (agregando nuevo) -->
+        
+        
+
+        <button type="submit" class="boton-agregar">Agregar Carta</button>
+        <a href="{{ url_for('home') }}" class="boton-volver">Volver a la coleccion</a>
+      </form>
+    </div>
+
+    <script>
+      const selectTipo = document.getElementById("tipo");
+      const selectDebilidad = document.getElementById("debilidad");
+      const selectEvolucion = document.getElementById("evolucion");
+      const selectExpansion = document.getElementById("expansion");
+      const selectSobre = document.getElementById("sobre");
+      const selectTipoGeneral = document.getElementById("tipo_general"); 
+
+      // Datos preexistentes del formulario (en caso de error de validacion)
+      const cartaData = JSON.parse('{{ carta_data | tojson | safe }}');
+
+      async function poblarSelect(
+        selectElement,
+        endpoint,
+        placeholderText,
+        valueField = "id",
+        textField = "nombre",
+        primerOpcionTexto = null,
+        valorPreseleccionado = null 
+      ) {
+       
+        const currentSelectedValue = valorPreseleccionado || selectElement.value;
+        selectElement.innerHTML = `<option value="">${placeholderText}</option>`;
+
+        try {
+          const response = await fetch(endpoint);
+          if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+          const data = await response.json();
+
+          if (data.error) throw new Error(data.error);
+
+          if (primerOpcionTexto) { 
+            const opt = document.createElement("option");
+            opt.value = ""; 
+            opt.textContent = primerOpcionTexto;
+            selectElement.appendChild(opt);
+          }
+
+          data.forEach((item) => {
+            const option = document.createElement("option");
+            option.value = item[valueField];
+            option.textContent = item[textField];
+            if (String(item[valueField]) === String(currentSelectedValue)) { 
+                option.selected = true;
+            }
+            selectElement.appendChild(option);
+          });
+
+        } catch (error) {
+          console.error(`Error poblando ${selectElement.id}:`, error);
+          selectElement.innerHTML = `<option value="">Error al cargar datos</option>`;
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", async () => { 
+     
+        await poblarSelect(
+          selectTipo,
+          "{{ url_for('api_get_tipos') }}",
+          "Cargando tipos...",
+          "id", "nombre", null,
+          cartaData.tipo 
+        );
+        await poblarSelect(
+          selectDebilidad,
+          "{{ url_for('api_get_tipos') }}",
+          "Cargando tipos (debilidad)...",
+          "id", "nombre", "Ninguna Debilidad",
+          cartaData.debilidad 
+        );
+        await poblarSelect(
+          selectEvolucion,
+          "{{ url_for('api_get_evoluciones') }}",
+          "Cargando evoluciones...",
+          "id", "nombre", null,
+          cartaData.evolucion 
+        );
+
+        // ***** POBLAR TIPO GENERAL *****
+        await poblarSelect(
+          selectTipoGeneral,
+          "{{ url_for('api_get_tipos_generales') }}", 
+          "Cargando tipos de carta...",
+          "id", 
+          "nombre",
+          null, 
+          cartaData.tipo_general 
+                                
+                                
+        );
+       
+        await poblarSelect(
+          selectExpansion,
+          "{{ url_for('api_get_expansiones') }}",
+          "Cargando expansiones...",
+          "id", "nombre", null,
+          cartaData.expansion 
+        );
+
+        const cargarSobres = async () => {
+            const expansionId = selectExpansion.value;
+            selectSobre.innerHTML = '<option value="">Cargando sobres...</option>';
+            selectSobre.disabled = true;
+
+            if (!expansionId) {
+                selectSobre.innerHTML = '<option value="">Selecciona una expansion primero</option>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/expansiones/${expansionId}/sobres`);
+                if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+                const sobres = await response.json(); 
+
+                
+                selectSobre.innerHTML = '';
+
+                if (sobres.length === 0) {
+                    selectSobre.innerHTML = '<option value="">No hay sobres para esta expansion</option>';
+                    
+                    return; 
+                }
+
+               
+                if (sobres.length > 1) {
+                    selectSobre.add(new Option("Selecciona un sobre", ""));
+                }
+
+               
+                sobres.forEach(sobre => {
+                    selectSobre.add(new Option(sobre.nombre, sobre.id));
+                });
+
+                
+                if (sobres.length === 1) {
+                    
+                    selectSobre.value = sobres[0].id;
+                } else {
+                   
+                    if (cartaData.sobre && selectSobre.querySelector(`option[value="${cartaData.sobre}"]`)) {
+                        selectSobre.value = cartaData.sobre;
+                    }
+                }
+                
+                
+                selectSobre.disabled = false;
+
+            } catch (error) {
+                console.error("Error al cargar sobres:", error);
+                selectSobre.innerHTML = '<option value="">Error al cargar sobres</option>';
+            }
+        };
+
+        selectExpansion.addEventListener("change", cargarSobres);
+
+        
+        if (selectExpansion.value) {
+            await cargarSobres();
+        }
+        setTimeout(() => {
+          const flashContainer = document.getElementById("flash-messages");
+          if (flashContainer) {
+            Array.from(flashContainer.children).forEach((msg) => {
+              setTimeout(() => {
+                msg.style.opacity = "0";
+                setTimeout(() => (msg.style.display = "none"), 500);
+              }, 6500);
+            });
+          }
+        }, 500);
+      });
+    </script>
+  </body>
+</html>
