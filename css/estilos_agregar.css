@@ -1,0 +1,148 @@
+/* Fondo general */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #1e1e1e;
+  background-image: url("/static/imagenes/fondo.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  margin: 0;
+  padding: 0;
+  color: #f0f0f0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+/* Contenedor del formulario */
+.form-container {
+  max-width: 600px;
+  margin: 80px auto 40px;
+  padding: 2rem;
+  background-color: rgba(0, 0, 0, 0.85);
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+}
+
+/* Título */
+.form-container h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #ffffff;
+}
+
+/* Etiquetas */
+.form-container label {
+  display: block;
+  margin-top: 15px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+/* Inputs y selects */
+.form-container input[type="text"],
+.form-container input[type="number"],
+.form-container input[type="file"],
+.form-container select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background-color: #2c2c2c;
+  color: #f0f0f0;
+  font-size: 1rem;
+}
+
+input[type="file"] {
+  padding: 0.4rem;
+}
+
+/* Deshabilitados */
+select:disabled {
+  background-color: #444;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+/* Checkboxes */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.checkbox-group label {
+  font-weight: normal;
+  color: #f0f0f0;
+}
+
+/* Botones generales */
+.boton-agregar,
+.boton-volver {
+  display: block;
+  width: 100%;
+  padding: 0.7rem;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 15px;
+  text-align: center;
+  transition: background-color 0.3s ease;
+  text-decoration: none;
+  color: white;
+}
+
+/* Botón agregar */
+.boton-agregar {
+  background-color: #4caf50;
+}
+
+.boton-agregar:hover {
+  background-color: #43a047;
+}
+
+/* Botón volver */
+.boton-volver {
+  background-color: #607d8b;
+}
+
+.boton-volver:hover {
+  background-color: #546e7a;
+}
+.boton-agregar,
+.boton-volver {
+  display: inline-block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.7rem;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 15px;
+  text-align: center;
+  transition: background-color 0.3s ease;
+  text-decoration: none;
+  color: white;
+}
+
+.boton-agregar {
+  background-color: #4caf50;
+}
+
+.boton-agregar:hover {
+  background-color: #43a047;
+}
+
+.boton-volver {
+  background-color: #607d8b;
+}
+
+.boton-volver:hover {
+  background-color: #546e7a;
+}
