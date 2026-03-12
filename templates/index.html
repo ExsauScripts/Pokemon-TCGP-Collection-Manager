@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Gestor de Pokemon TCGP</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/estilos_index.css') }}"
+    />
+    <link
+      rel="icon"
+      href="{{ url_for('static', filename='imagenes/pokeball.svg') }}"
+    />
+    <!-- CHOICES.JS CSS LOCAL -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/choices.min.css') }}"
+    />
+    <script></script>
+    <style>
+      .choices {
+        width: 100%;
+        margin-bottom: 0;
+        font-size: 1em;
+      }
+      .choices__inner {
+        min-height: 38px;
+        padding: 6px 10px;
+        background-color: white;
+        border: 1px solid #ccc;
+      }
+      .choices__list--multiple .choices__item {
+        background-color: #007bff;
+        border: 1px solid #007bff;
+        color: white;
+        font-size: 0.9em;
+        margin-bottom: 3px;
+      }
+      .choices[data-type*="select-multiple"] .choices__button,
+      .choices[data-type*="text"] .choices__button {
+        border-left: 1px solid #0056b3;
+        margin-left: 5px;
+      }
+      .choices__list--dropdown .choices__item--selectable.is-highlighted {
+        background-color: #f0f0f0;
+      }
+      .filtros-container .filtro-grupo {
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="navbar">
+      <div class="navbar-right">
+        <div class="dropdown">
+          <button class="dropbtn">Menu ▼</button>
+          <div class="dropdown-content">
+            <a href="/?modo=main">Main</a>
+            <a href="/?modo=f2p">F2P</a>
+            <a href="{{ url_for('agregar_carta_route') }}">Agregar carta</a>
+            <div class="submenu">
+              <button class="submenu-btn">Admin ▸</button>
+              <div class="submenu-content">
+                <a href="{{ url_for('admin_gestionar_tipos') }}"
+                  >Gestionar Tipos</a
+                >
+                <a href="{{ url_for('admin_gestionar_tipos_generales') }}"
+                  >Gestionar Tipos de Carta</a
+                >
+                <a href="{{ url_for('admin_gestionar_evoluciones') }}"
+                  >Gestionar Evoluciones</a
+                >
+                <a href="{{ url_for('admin_gestionar_expansiones') }}"
+                  >Gestionar Expansiones y Sobres</a
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin: 10px 0 20px 0">
+      <label for="cartasPorFila" class="etiqueta-cartas"
+        >Cartas por fila:</label
+      >
+      <select id="cartasPorFila" style="padding: 5px; font-size: 16px">
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6" selected>6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+      </select>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <div
+      id="flash-messages"
+      style="
+        position: fixed;
+        top: 70px;
+        right: 10px;
+        z-index: 1050;
+        width: 300px;
+      "
+    >
+      {% for category, message in messages %}
+      <div
+        class="flash-message {{ category }}"
+        style="
+          padding: 10px;
+          margin-bottom: 5px;
+          border-radius: 5px;
+          background-color: #d4edda;
+          color: #155724;
+          border: 1px solid #c3e6cb;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        "
+      >
+        {{ message }}
+        <button
+          type="button"
+          style="
+            float: right;
+            background: none;
+            border: none;
+            font-size: 1.2em;
+            cursor: pointer;
+            line-height: 1;
+          "
+          onclick="this.parentElement.style.display='none';"
+        >
+          ×
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %} {% endwith %}
+
+    <div class="dropdown-filtros">
+      <button id="dropdownToggleBtn" class="dropdown-toggle">Filtros ▼</button>
+      <div id="dropdownMenu" class="dropdown-menu oculto">
+        <div class="filtros-container">
+          <div class="filtro-grupo">
+            <label for="filtroNombre">Nombre:</label>
+            <input
+              type="text"
+              id="filtroNombre"
+              placeholder="Buscar por nombre"
+            />
+          </div>
+          <div class="filtro-grupo">
+            <label for="filtroExpansion">Expansion:</label>
+            <select id="filtroExpansion">
+              <option value="">-- Todas --</option>
+            </select>
+          </div>
+          <div class="filtro-grupo">
+            <label for="filtroSobre">Sobre:</label>
+            <select id="filtroSobre" disabled>
+              <option value="">-- Expansion primero --</option>
+            </select>
+          </div>
+          <div class="filtro-grupo">
+            <label for="filtroTipo">Tipo:</label>
+            <select id="filtroTipo">
+              <option value="">-- Todos --</option>
+            </select>
+          </div>
+          <div class="filtro-grupo">
+            <label for="filtroTipoGeneral">Tipo de Carta:</label>
+            <select id="filtroTipoGeneral" multiple>
+              <!-- Opciones cargadas por JS, transformadas por Choices.js -->
+            </select>
+          </div>
+          <div class="filtro-grupo">
+            <label for="filtroDebilidad">Debilidad:</label>
+            <select id="filtroDebilidad">
+              <option value="">-- Todas --</option>
+            </select>
+          </div>
+          <div class="filtro-grupo">
+            <label for="filtroEvolucion">Evolucion:</label>
+            <select id="filtroEvolucion">
+              <option value="">-- Todas --</option>
+            </select>
+          </div>
+          <div class="filtro-grupo">
+            <label for="filtroHP">HP:</label>
+            <select id="filtroHP">
+              <option value="">-- Todos --</option>
+              <option value="0-50">0 - 50</option>
+              <option value="51-100">51 - 100</option>
+              <option value="101-150">101 - 150</option>
+              <option value="151-200">151 - 200</option>
+              <option value="201-250">201 - 250</option>
+              <option value="251+">251+</option>
+            </select>
+          </div>
+          <div class="filtro-grupo">
+            <label for="ordenarHP">Ordenar por vida</label>
+            <select id="ordenarHP">
+              <option value="">-- Por Defecto --</option>
+              <option value="hp_desc">Descendente</option>
+              <option value="hp_asc">Ascendente</option>
+            </select>
+          </div>
+          <div class="filtro-grupo">
+            <label for="filtroRareza">Rareza:</label>
+            <select id="filtroRareza">
+              <option value="">-- Todas --</option>
+              <option value="1 Rombo">1 Rombo</option>
+              <option value="2 Rombos">2 Rombos</option>
+              <option value="3 Rombos">3 Rombos</option>
+              <option value="4 Rombos">4 Rombos</option>
+              <option value="1 Estrella">1 Estrella</option>
+              <option value="2 Estrellas">2 Estrellas</option>
+              <option value="3 Estrellas">3 Estrellas</option>
+              <option value="1 Estrella arcoiris">1 Estrella arcoiris</option>
+              <option value="2 Estrellas arcoiris">2 Estrellas arcoiris</option>
+              <option value="Corona">Corona</option>
+              <option value="Promo">Promo</option>
+            </select>
+          </div>
+          <div class="filtro-grupo">
+            <label for="filtroCosteRetirada">Coste Retirada:</label>
+            <select id="filtroCosteRetirada">
+              <option value="">-- Todos --</option>
+              <option value="0">0 Energias</option>
+              <option value="1">1 Energia</option>
+              <option value="2">2 Energias</option>
+              <option value="3">3 Energias</option>
+              <option value="4">4 Energias</option>
+              <option value="5">5 Energias</option>
+            </select>
+          </div>
+          <div class="filtro-checkbox-grupo">
+            <input type="checkbox" id="filtroEx" /><label for="filtroEx"
+              >Es EX</label
+            >
+          </div>
+          <div class="filtro-checkbox-grupo">
+            <input type="checkbox" id="filtroHabilidad" /><label
+              for="filtroHabilidad"
+              >Tiene Habilidad</label
+            >
+          </div>
+          <button
+            type="button"
+            class="boton-limpiar-filtros"
+            id="limpiarFiltrosBtn"
+          >
+            Limpiar Filtros
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="coleccionCartasGrid" class="cartas-grid">
+      <p id="mensajeCarga" style="grid-column: 1 / -1; text-align: center">
+        Cargando cartas...
+      </p>
+    </div>
+
+    <script>
+      const toggleBtn = document.getElementById("dropdownToggleBtn");
+      const dropdownMenu = document.getElementById("dropdownMenu");
+      if (toggleBtn && dropdownMenu) {
+        toggleBtn.addEventListener("click", () => {
+          dropdownMenu.classList.toggle("oculto");
+        });
+        document.addEventListener("click", (event) => {
+          if (
+            !dropdownMenu.contains(event.target) &&
+            !toggleBtn.contains(event.target)
+          ) {
+            dropdownMenu.classList.add("oculto");
+          }
+        });
+      }
+    </script>
+
+    <!-- CHOICES.JS JS LOCAL -->
+    <script src="{{ url_for('static', filename='js/choices.min.js') }}"></script>
+
+    <script>
+      const URL_API_CARTAS =
+        "{{ url_for('api_get_todas_las_cartas_para_index') }}";
+      const URL_API_TIPOS = "{{ url_for('api_get_tipos') }}";
+      const URL_API_EVOLUCIONES = "{{ url_for('api_get_evoluciones') }}";
+      const URL_API_EXPANSIONES = "{{ url_for('api_get_expansiones') }}";
+      const URL_API_TIPOS_GENERALES =
+        "{{ url_for('api_get_tipos_generales') }}";
+      const URL_API_SOBRES_BASE =
+        "{{ url_for('api_get_sobres_por_expansion', expansion_id=0) }}".replace(
+          "/0/sobres",
+          ""
+        );
+
+      const FILTROS_STORAGE_KEY = "pokemonTCGFilters";
+
+      const coleccionCartasGrid = document.getElementById(
+        "coleccionCartasGrid"
+      );
+      const mensajeCargaP = document.getElementById("mensajeCarga");
+      const selectCartasPorFila = document.getElementById("cartasPorFila");
+
+      const filtroNombreInput = document.getElementById("filtroNombre");
+      const filtroExpansionSelect = document.getElementById("filtroExpansion");
+      const filtroSobreSelect = document.getElementById("filtroSobre");
+      const filtroTipoSelect = document.getElementById("filtroTipo");
+      const filtroTipoGeneralSelect =
+        document.getElementById("filtroTipoGeneral");
+      const filtroDebilidadSelect = document.getElementById("filtroDebilidad");
+      const filtroEvolucionSelect = document.getElementById("filtroEvolucion");
+      const filtroHPSelect = document.getElementById("filtroHP");
+      const ordenarHPSelect = document.getElementById("ordenarHP");
+      const filtroRarezaSelect = document.getElementById("filtroRareza");
+      const filtroCosteRetiradaSelect = document.getElementById(
+        "filtroCosteRetirada"
+      );
+      const filtroExCheckbox = document.getElementById("filtroEx");
+      const filtroHabilidadCheckbox =
+        document.getElementById("filtroHabilidad");
+      const limpiarFiltrosBtn = document.getElementById("limpiarFiltrosBtn");
+
+      let todasLasCartas = [];
+      let modoVista = "main";
+      let choicesTipoGeneral = null;
+
+      async function poblarSelect(
+        selectElement,
+        endpoint,
+        placeholderText = "Cargando...",
+        primerOpcionTexto = "-- Todas --"
+      ) {
+        const valorActual = selectElement.value;
+        selectElement.innerHTML = `<option value="">${placeholderText}</option>`;
+        try {
+          const response = await fetch(endpoint);
+          if (!response.ok)
+            throw new Error(`HTTP error ${response.status} en ${endpoint}`);
+          const data = await response.json();
+          if (data.error) throw new Error(data.error);
+          selectElement.innerHTML = `<option value="">${primerOpcionTexto}</option>`;
+          data.forEach((item) => {
+            const option = document.createElement("option");
+            option.value = item.id;
+            option.textContent = item.nombre;
+            selectElement.appendChild(option);
+          });
+          if (selectElement.querySelector(`option[value="${valorActual}"]`)) {
+            selectElement.value = valorActual;
+          }
+        } catch (error) {
+          console.error(`Error poblando ${selectElement.id}:`, error);
+          selectElement.innerHTML = `<option value="">Error al cargar</option>`;
+        }
+      }
+
+      async function poblarTipoGeneralParaFiltro() {
+        const selectElement = filtroTipoGeneralSelect;
+        const endpoint = URL_API_TIPOS_GENERALES;
+        let currentValues = [];
+        if (choicesTipoGeneral) {
+          currentValues = choicesTipoGeneral.getValue(true) || [];
+        }
+        selectElement.innerHTML = "";
+        try {
+          const response = await fetch(endpoint);
+          if (!response.ok)
+            throw new Error(`HTTP error ${response.status} en ${endpoint}`);
+          const data = await response.json();
+          if (data.error) throw new Error(data.error);
+
+          const choicesOptions = data.map((item) => ({
+            value: item.nombre,
+            label: item.nombre,
+            selected: currentValues.includes(item.nombre),
+          }));
+
+          if (choicesTipoGeneral) {
+            choicesTipoGeneral.clearStore();
+            choicesTipoGeneral.setChoices(
+              choicesOptions,
+              "value",
+              "label",
+              false
+            );
+          } else {
+            choicesOptions.forEach((choiceOpt) => {
+              const option = document.createElement("option");
+              option.value = choiceOpt.value;
+              option.textContent = choiceOpt.label;
+              if (choiceOpt.selected) option.selected = true;
+              selectElement.appendChild(option);
+            });
+          }
+        } catch (error) {
+          console.error(
+            `Error poblando ${selectElement.id} para Choices:`,
+            error
+          );
+          if (choicesTipoGeneral) choicesTipoGeneral.clearStore();
+        }
+      }
+
+      function actualizarColumnasGrid() {
+        coleccionCartasGrid.style.setProperty(
+          "--columnas",
+          selectCartasPorFila.value
+        );
+      }
+      function determinarModoVista() {
+        modoVista =
+          new URLSearchParams(window.location.search).get("modo") === "f2p"
+            ? "f2p"
+            : "main";
+      }
+      function renderizarCartas(cartasAMostrar) {
+        coleccionCartasGrid.innerHTML = "";
+        if (cartasAMostrar.length === 0) {
+          mensajeCargaP.textContent =
+            "No se encontraron cartas con los filtros aplicados.";
+          mensajeCargaP.style.display = "block";
+          const parent = mensajeCargaP.parentElement;
+          if (parent !== coleccionCartasGrid)
+            coleccionCartasGrid.appendChild(parent || mensajeCargaP);
+          return;
+        }
+        mensajeCargaP.style.display = "none";
+        cartasAMostrar.forEach((carta) => {
+          const cantidadMostrada =
+            modoVista === "f2p" ? carta.cantidad_f2p : carta.cantidad;
+          const cartaDiv = document.createElement("div");
+          cartaDiv.className = "carta";
+          if (cantidadMostrada === 0) cartaDiv.classList.add("cantidad-cero");
+
+          cartaDiv.onclick = () => {
+            window.location.href = `/carta/${carta.id}`;
+          };
+          cartaDiv.innerHTML = `
+              <img src="${carta.imagen_url}" alt="${carta.nombre}" onerror="this.onerror=null; this.src='{{ url_for('static', filename='imagenes/pokeball.svg') }}';">
+              <div class="nombre">${carta.nombre}</div>
+              <div class="cantidad-control" onclick="event.stopPropagation();">
+                  <button class="btn-decrementar" data-id="${carta.id}">-</button>
+                  <span id="cantidad-${carta.id}">${cantidadMostrada}</span>
+                  <button class="btn-incrementar" data-id="${carta.id}">+</button>
+              </div>`;
+          coleccionCartasGrid.appendChild(cartaDiv);
+        });
+        document
+          .querySelectorAll(".btn-decrementar, .btn-incrementar")
+          .forEach((button) => {
+            button.addEventListener("click", (event) => {
+              modificarCantidadBackend(
+                event.target.dataset.id,
+                event.target.classList.contains("btn-incrementar") ? 1 : -1
+              );
+            });
+          });
+      }
+
+      function getValoresFiltros() {
+        let tiposGeneralesSeleccionados = [];
+        if (choicesTipoGeneral) {
+          tiposGeneralesSeleccionados = choicesTipoGeneral.getValue(true) || [];
+        } else if (filtroTipoGeneralSelect) {
+          for (const option of filtroTipoGeneralSelect.options) {
+            if (option.selected) tiposGeneralesSeleccionados.push(option.value);
+          }
+        }
+        return {
+          nombre: filtroNombreInput.value.toLowerCase().trim(),
+          expansion: filtroExpansionSelect.value,
+          sobre: filtroSobreSelect.disabled ? "" : filtroSobreSelect.value,
+          tipo: filtroTipoSelect.value,
+          tipoGeneral: tiposGeneralesSeleccionados,
+          debilidad: filtroDebilidadSelect.value,
+          evolucion: filtroEvolucionSelect.value,
+          hp: filtroHPSelect.value,
+          ordenHP: ordenarHPSelect.value,
+          rareza: filtroRarezaSelect.value,
+          costeRetirada: filtroCosteRetiradaSelect.value,
+          ex: filtroExCheckbox.checked,
+          habilidad: filtroHabilidadCheckbox.checked,
+        };
+      }
+
+      function aplicarFiltros() {
+        const filtros = getValoresFiltros();
+
+        sessionStorage.setItem(FILTROS_STORAGE_KEY, JSON.stringify(filtros));
+
+        let cartasFiltradas = [...todasLasCartas];
+        cartasFiltradas = cartasFiltradas.filter((carta) => {
+          if (
+            filtros.nombre &&
+            !carta.nombre.toLowerCase().includes(filtros.nombre)
+          )
+            return false;
+          if (
+            filtros.expansion &&
+            String(carta.expansion_id) !== filtros.expansion
+          )
+            return false;
+          if (filtros.sobre && String(carta.sobre_id) !== filtros.sobre)
+            return false;
+          if (filtros.tipo && String(carta.tipo_id) !== filtros.tipo)
+            return false;
+          if (
+            filtros.tipoGeneral &&
+            filtros.tipoGeneral.length > 0 &&
+            !filtros.tipoGeneral.includes(carta.tipo_general)
+          )
+            return false;
+          if (
+            filtros.debilidad &&
+            String(carta.debilidad_id) !== filtros.debilidad
+          )
+            return false;
+          if (
+            filtros.evolucion &&
+            String(carta.evolucion_id) !== filtros.evolucion
+          )
+            return false;
+          if (filtros.rareza && carta.rareza !== filtros.rareza) return false;
+          if (
+            filtros.costeRetirada &&
+            String(carta.coste_retirada) !== filtros.costeRetirada
+          )
+            return false;
+          if (filtros.ex && !carta.ex) return false;
+          if (filtros.habilidad && !carta.habilidad) return false;
+          if (filtros.hp) {
+            const hpCarta = parseInt(carta.hp);
+            if (isNaN(hpCarta)) return false;
+            const [minStr, maxStrOrPlus] = filtros.hp.split("-");
+            const minHp = parseInt(minStr);
+            if (maxStrOrPlus.endsWith("+")) {
+              if (hpCarta < parseInt(maxStrOrPlus.slice(0, -1))) return false;
+            } else {
+              const maxHp = parseInt(maxStrOrPlus);
+              if (hpCarta < minHp || hpCarta > maxHp) return false;
+            }
+          }
+          return true;
+        });
+        if (filtros.ordenHP) {
+          cartasFiltradas.sort((a, b) =>
+            filtros.ordenHP === "hp_desc"
+              ? (parseInt(b.hp) || 0) - (parseInt(a.hp) || 0)
+              : (parseInt(a.hp) || 0) - (parseInt(b.hp) || 0)
+          );
+        }
+        renderizarCartas(cartasFiltradas);
+      }
+
+      async function cargarSobresParaFiltroYAplicar() {
+        const expansionId = filtroExpansionSelect.value;
+        const valorActualSobre = filtroSobreSelect.value;
+        filtroSobreSelect.innerHTML = '<option value="">-- Todas --</option>';
+        filtroSobreSelect.disabled = !expansionId;
+
+        if (!expansionId) {
+          filtroSobreSelect.value = "";
+          aplicarFiltros();
+          return;
+        }
+        try {
+          const response = await fetch(
+            `${URL_API_SOBRES_BASE}/${expansionId}/sobres`
+          );
+          if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+          const data = await response.json();
+          if (data.error) throw new Error(data.error);
+
+          data.forEach((s) =>
+            filtroSobreSelect.appendChild(new Option(s.nombre, s.id))
+          );
+
+          if (
+            filtroSobreSelect.querySelector(
+              `option[value="${valorActualSobre}"]`
+            )
+          ) {
+            filtroSobreSelect.value = valorActualSobre;
+          } else {
+            filtroSobreSelect.value = "";
+          }
+        } catch (error) {
+          console.error("Error cargando sobres:", error);
+          filtroSobreSelect.innerHTML =
+            '<option value="">Error al cargar</option>';
+        }
+        aplicarFiltros();
+      }
+
+      function limpiarTodosLosFiltros() {
+        sessionStorage.removeItem(FILTROS_STORAGE_KEY);
+
+        filtroNombreInput.value = "";
+        filtroExpansionSelect.value = "";
+        filtroSobreSelect.innerHTML =
+          '<option value="">-- Expansion primero --</option>';
+        filtroSobreSelect.disabled = true;
+        filtroSobreSelect.value = "";
+        filtroTipoSelect.value = "";
+
+        if (choicesTipoGeneral) {
+          choicesTipoGeneral.removeActiveItems();
+        } else if (filtroTipoGeneralSelect) {
+          for (const option of filtroTipoGeneralSelect.options)
+            option.selected = false;
+        }
+
+        filtroDebilidadSelect.value = "";
+        filtroEvolucionSelect.value = "";
+        filtroHPSelect.value = "";
+        ordenarHPSelect.value = "";
+        filtroRarezaSelect.value = "";
+        filtroCosteRetiradaSelect.value = "";
+        filtroExCheckbox.checked = false;
+        filtroHabilidadCheckbox.checked = false;
+
+        aplicarFiltros();
+      }
+
+      async function modificarCantidadBackend(cartaId, delta) {
+        const cantidadSpan = document.getElementById(`cantidad-${cartaId}`);
+        if (!cantidadSpan) return;
+        let actual = parseInt(cantidadSpan.textContent);
+        let nueva = Math.max(0, actual + delta);
+        const cartaArr = todasLasCartas.find((c) => c.id == cartaId);
+        if (!cartaArr) return;
+        if (modoVista === "f2p") {
+          cartaArr.cantidad_f2p = nueva;
+          cantidadSpan.textContent = nueva;
+        } else {
+          try {
+            const res = await fetch(`/modificar_cantidad/${cartaId}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ delta }),
+            });
+            const data = await res.json();
+            if (data.success) {
+              cantidadSpan.textContent = data.nueva_cantidad;
+              cartaArr.cantidad = data.nueva_cantidad;
+            } else {
+              alert("Error al modificar: " + (data.error || "desconocido"));
+              cantidadSpan.textContent = actual;
+            }
+          } catch (err) {
+            alert("Error de red al modificar cantidad.");
+            console.error(err);
+            cantidadSpan.textContent = actual;
+          }
+        }
+        const cartaDiv = cantidadSpan.closest(".carta");
+        if (parseInt(cantidadSpan.textContent) === 0)
+          cartaDiv.classList.add("cantidad-cero");
+        else cartaDiv.classList.remove("cantidad-cero");
+      }
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        determinarModoVista();
+        actualizarColumnasGrid();
+        if (selectCartasPorFila)
+          selectCartasPorFila.addEventListener(
+            "change",
+            actualizarColumnasGrid
+          );
+
+        await Promise.all([
+          poblarSelect(filtroExpansionSelect, URL_API_EXPANSIONES),
+          poblarSelect(filtroTipoSelect, URL_API_TIPOS),
+          poblarTipoGeneralParaFiltro(),
+          poblarSelect(
+            filtroDebilidadSelect,
+            URL_API_TIPOS,
+            "Cargando...",
+            "Ninguna"
+          ),
+          poblarSelect(filtroEvolucionSelect, URL_API_EVOLUCIONES),
+        ]);
+
+        if (typeof Choices !== "undefined" && filtroTipoGeneralSelect) {
+          choicesTipoGeneral = new Choices(filtroTipoGeneralSelect, {
+            removeItemButton: true,
+            placeholder: true,
+            placeholderValue: "Seleccionar Tipos de Carta...",
+          });
+
+          filtroTipoGeneralSelect.addEventListener("change", function (event) {
+            aplicarFiltros();
+          });
+        } else {
+          console.warn("Choices.js no esta cargado o el select no existe.");
+        }
+
+        const savedFiltersJSON = sessionStorage.getItem(FILTROS_STORAGE_KEY);
+        if (savedFiltersJSON) {
+          const savedFilters = JSON.parse(savedFiltersJSON);
+
+          filtroNombreInput.value = savedFilters.nombre || "";
+          filtroTipoSelect.value = savedFilters.tipo || "";
+          if (choicesTipoGeneral && savedFilters.tipoGeneral) {
+            choicesTipoGeneral.setValue(savedFilters.tipoGeneral);
+          }
+          filtroDebilidadSelect.value = savedFilters.debilidad || "";
+          filtroEvolucionSelect.value = savedFilters.evolucion || "";
+          filtroHPSelect.value = savedFilters.hp || "";
+          ordenarHPSelect.value = savedFilters.ordenHP || "";
+          filtroRarezaSelect.value = savedFilters.rareza || "";
+          filtroCosteRetiradaSelect.value = savedFilters.costeRetirada || "";
+          filtroExCheckbox.checked = savedFilters.ex || false;
+          filtroHabilidadCheckbox.checked = savedFilters.habilidad || false;
+
+          if (savedFilters.expansion) {
+            filtroExpansionSelect.value = savedFilters.expansion;
+
+            const expansionId = filtroExpansionSelect.value;
+            if (expansionId) {
+              filtroSobreSelect.disabled = false;
+              try {
+                const response = await fetch(
+                  `${URL_API_SOBRES_BASE}/${expansionId}/sobres`
+                );
+                const data = await response.json();
+                filtroSobreSelect.innerHTML =
+                  '<option value="">-- Todas --</option>';
+                data.forEach((s) =>
+                  filtroSobreSelect.appendChild(new Option(s.nombre, s.id))
+                );
+                if (savedFilters.sobre) {
+                  filtroSobreSelect.value = savedFilters.sobre;
+                }
+              } catch (error) {
+                console.error("Error restaurando sobres:", error);
+              }
+            }
+          }
+        }
+
+        try {
+          const response = await fetch(URL_API_CARTAS);
+          if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+          const jsonData = await response.json();
+          if (jsonData.error) throw new Error(jsonData.error);
+          todasLasCartas = jsonData;
+          aplicarFiltros();
+        } catch (error) {
+          console.error("Error cargando cartas:", error);
+          mensajeCargaP.textContent = `Error al cargar cartas: ${error.message}`;
+          mensajeCargaP.style.display = "block";
+        }
+
+        const elementosFiltroConInputEvent = [filtroNombreInput];
+        let elementosFiltroConChangeEvent = [
+          filtroSobreSelect,
+          filtroTipoSelect,
+          filtroDebilidadSelect,
+          filtroEvolucionSelect,
+          filtroHPSelect,
+          ordenarHPSelect,
+          filtroRarezaSelect,
+          filtroCosteRetiradaSelect,
+          filtroExCheckbox,
+          filtroHabilidadCheckbox,
+        ];
+
+        if (!choicesTipoGeneral && filtroTipoGeneralSelect) {
+          elementosFiltroConChangeEvent.push(filtroTipoGeneralSelect);
+        }
+
+        elementosFiltroConInputEvent.forEach((el) => {
+          if (el) el.addEventListener("input", aplicarFiltros);
+        });
+        elementosFiltroConChangeEvent.forEach((el) => {
+          if (el) el.addEventListener("change", aplicarFiltros);
+        });
+
+        if (filtroExpansionSelect) {
+          filtroExpansionSelect.addEventListener(
+            "change",
+            cargarSobresParaFiltroYAplicar
+          );
+        }
+
+        if (limpiarFiltrosBtn)
+          limpiarFiltrosBtn.addEventListener("click", limpiarTodosLosFiltros);
+
+        setTimeout(() => {
+          const flashContainer = document.getElementById("flash-messages");
+          if (flashContainer) {
+            Array.from(flashContainer.children).forEach((msg) => {
+              setTimeout(() => {
+                msg.style.opacity = "0";
+                setTimeout(() => (msg.style.display = "none"), 500);
+              }, 6500);
+            });
+          }
+        }, 500);
+      });
+    </script>
+  </body>
+</html>
